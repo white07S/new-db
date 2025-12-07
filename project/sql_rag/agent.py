@@ -64,64 +64,99 @@ class ScratchpadSchemaAgent:
     async def check_sufficiency(self, query: str, chunks: List[Chunk]) -> bool:
         """Check if current chunks are sufficient to answer the query."""
         schema_summary = self._format_schema_context(chunks)
+
         prompt = f"""
-        User Query: "{query}"
-        
-        Current Retrieved Schema:
-        {schema_summary}
-        
-        Task: Determine if the valid SQL query can be constructed with the above schema.
-        
-        Reasoning Steps:
-        1. Identify the entities and attributes in the User Query (e.g. "orders", "customer city").
-        2. Check if the Current Retrieved Schema contains tables/columns for ALL identified attributes.
-        3. If any table or column is missing, the answer is NO.
-        4. If all are present, the answer is YES.
-        
-        Response Format (JSON):
-        {{
-            "reasoning": "I found table X for attribute Y, but missing Z...",
-            "sufficient": "YES" or "NO"
-        }}
-        """
-        response_text = await self._call_llm(prompt)
-        print(f"[Scratchpad] Sufficiency Reasoning: {response_text}") # Debug
-        return "YES" in response_text.upper() and '"sufficient": "YES"' in response_text or '"sufficient": "yes"' in response_text
+User Query: "{query}"
+
+Current Retrieved Schema:
+{schema_summary}
+
+Task: Determine if the valid SQL query can be constructed with the above schema.
+
+Reasoning Steps:
+1. Identify the entities and attributes in the User Query (e.g. "orders", "customer city").
+2. Check if the Current Retrieved Schema contains tables/columns for ALL identified attributes.
+3. If any table or column is missing, the answer is NO.
+4. If all are present, the answer is YES.
+
+Response Format (JSON):
+{{
+    "reasoning": "I found table X for attribute Y, but missing Z...",
+    "sufficient": "YES" or "NO"
+}}
+"""
+
+        try:
+            response_text = await self._call_llm(prompt)
+
+            # Parse JSON response
+            start = response_text.find("{")
+            end = response_text.rfind("}") + 1
+            if start != -1 and end > start:
+                json_str = response_text[start:end]
+                result = json.loads(json_str)
+
+                logger.info(f"[Scratchpad] Sufficiency Check", extra={"props": {
+                    "reasoning": result.get("reasoning", ""),
+                    "sufficient": result.get("sufficient", "")
+                }})
+
+                return result.get("sufficient", "").upper() == "YES"
+            else:
+                # Fallback to text parsing
+                return "YES" in response_text.upper() and ('"sufficient": "YES"' in response_text or '"sufficient": "yes"' in response_text)
+
+        except Exception as e:
+            logger.error(f"Error parsing sufficiency check: {e}")
+            # Fallback to basic text parsing
+            return "YES" in response_text.upper() and ('"sufficient": "YES"' in response_text or '"sufficient": "yes"' in response_text)
 
     async def plan_next_step(self, query: str, existing_tables: List[str]) -> Dict[str, Any]:
         """Plan next retrieval step based on what we already have."""
+
         prompt = f"""
-        User Query: "{query}"
-        
-        Already Found Tables: {existing_tables}
-        
-        Task: Identify MISSING information.
-        
-        Reasoning Steps:
-        1. Compare User Query requirements vs Already Found Tables.
-        2. If a required entity (e.g. "product category") is missing, generate a keyword for it.
-        3. Do NOT generate keywords for tables we already have.
-        
-        Response Format (JSON):
-        {{
-            "reasoning": "Missing product info...",
-            "keywords": ["missing_entity_keyword"],
-            "sub_questions": ["Where is X stored?"]
-        }}
-        """
-        response_text = await self._call_llm(prompt)
+User Query: "{query}"
+
+Already Found Tables: {existing_tables}
+
+Task: Identify MISSING information.
+
+Reasoning Steps:
+1. Compare User Query requirements vs Already Found Tables.
+2. If a required entity (e.g. "product category") is missing, generate a keyword for it.
+3. Do NOT generate keywords for tables we already have.
+
+Response Format (JSON):
+{{
+    "reasoning": "Missing product info...",
+    "keywords": ["missing_entity_keyword"],
+    "sub_questions": ["Where is X stored?"]
+}}
+"""
 
         try:
-            # find first { and last }
+            response_text = await self._call_llm(prompt)
+
+            # Parse JSON response
             start = response_text.find("{")
             end = response_text.rfind("}") + 1
-            if start != -1 and end != -1:
+            if start != -1 and end > start:
                 json_str = response_text[start:end]
-                return json.loads(json_str) 
-            return json.loads(response_text)
+                result = json.loads(json_str)
+
+                logger.info(f"[Scratchpad] Next Step Plan", extra={"props": {
+                    "reasoning": result.get("reasoning", ""),
+                    "keywords": result.get("keywords", [])
+                }})
+
+                return result
+            else:
+                return {"keywords": [], "sub_questions": [], "reasoning": ""}
+
         except Exception as e:
-            print(f"Error parsing plan JSON: {e}")
-            return {"keywords": [], "sub_questions": []}
+            logger.error(f"Error parsing plan JSON: {e}")
+            # Fallback
+            return {"keywords": [], "sub_questions": [], "reasoning": ""}
 
     async def retrieve_table_first(self, keywords: List[str]) -> List[Chunk]:
         """Retrieve by table names using vector search."""

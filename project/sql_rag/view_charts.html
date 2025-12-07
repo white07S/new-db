@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chart Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .chart-info {
+            margin-bottom: 20px;
+        }
+        .reasoning {
+            background: white;
+            padding: 10px;
+            border-left: 3px solid #4CAF50;
+            margin: 10px 0;
+        }
+        #vis1, #vis2 {
+            width: 100%;
+            height: 400px;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            background: #fee;
+            border: 1px solid red;
+            border-radius: 4px;
+        }
+        .info-box {
+            background: #e7f3fe;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>SQL RAG Pipeline - Chart Visualization</h1>
+
+    <div class="info-box">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Open your terminal and navigate to the project directory</li>
+            <li>Run: <code>ls -la chart_outputs/*.json</code> to see available chart files</li>
+            <li>Copy the filename of the chart you want to view</li>
+            <li>Open this HTML file in a browser</li>
+            <li>Click "Choose File" and select the JSON file from chart_outputs/</li>
+        </ol>
+    </div>
+
+    <div>
+        <label for="fileInput">Select Chart JSON File:</label>
+        <input type="file" id="fileInput" accept=".json">
+    </div>
+
+    <div id="metadata" style="display:none; margin-top: 20px;">
+        <h2>Query Information</h2>
+        <p><strong>Query:</strong> <span id="query"></span></p>
+        <p><strong>SQL:</strong> <pre id="sql" style="background: #f5f5f5; padding: 10px; overflow-x: auto;"></pre></p>
+        <p><strong>Data Shape:</strong> <span id="dataShape"></span></p>
+    </div>
+
+    <div id="charts"></div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        displayCharts(data);
+                    } catch (error) {
+                        alert('Error parsing JSON: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function displayCharts(data) {
+            // Display metadata
+            const metadataDiv = document.getElementById('metadata');
+            metadataDiv.style.display = 'block';
+            document.getElementById('query').textContent = data.query || 'N/A';
+            document.getElementById('sql').textContent = data.sql || 'N/A';
+            document.getElementById('dataShape').textContent =
+                data.data_shape ? `${data.data_shape.rows} rows × ${data.data_shape.columns} columns` : 'N/A';
+
+            // Clear existing charts
+            const chartsDiv = document.getElementById('charts');
+            chartsDiv.innerHTML = '';
+
+            // Display each chart
+            data.charts.forEach((chart, index) => {
+                const container = document.createElement('div');
+                container.className = 'chart-container';
+
+                const title = document.createElement('h2');
+                title.textContent = `Chart ${index + 1}: ${chart.chart_type || 'Unknown Type'}`;
+                container.appendChild(title);
+
+                if (chart.reasoning) {
+                    const reasoning = document.createElement('div');
+                    reasoning.className = 'reasoning';
+                    reasoning.innerHTML = `<strong>Reasoning:</strong> ${chart.reasoning}`;
+                    container.appendChild(reasoning);
+                }
+
+                const visDiv = document.createElement('div');
+                visDiv.id = `vis${index}`;
+                container.appendChild(visDiv);
+
+                chartsDiv.appendChild(container);
+
+                // Render the chart
+                if (chart.vega_lite_spec && Object.keys(chart.vega_lite_spec).length > 0) {
+                    vegaEmbed(`#vis${index}`, chart.vega_lite_spec)
+                        .catch(error => {
+                            visDiv.innerHTML = `<div class="error">Error rendering chart: ${error.message}</div>`;
+                        });
+                } else {
+                    visDiv.innerHTML = '<div class="error">No valid Vega-Lite specification found for this chart</div>';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

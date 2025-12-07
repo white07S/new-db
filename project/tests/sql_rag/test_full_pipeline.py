@@ -47,15 +47,40 @@ async def main():
     try:
         result = await pipeline.run_pipeline(query)
         logger.info("FINAL RESULT", extra={"props": {"result": str(result)}})
-        # Optional: pretty print dataframe
+
+        # Display data results
         if "data" in result:
-             # logger.info("Data Preview", extra={"props": {"data": result["data"].to_json()}})
              print("\nData Preview:")
              print(result["data"])
-        
+
+        # Display SQL reasoning
         if "thoughts" in result:
              print("\nExecution Thoughts & Corrections:")
              print(result["thoughts"])
+
+        # Display chart generation results
+        if "chart_1" in result and result["chart_1"]:
+            print("\n=== Chart 1 ===")
+            print(f"Chart Type: {result['chart_1'].get('chart_type', 'N/A')}")
+            print(f"Reasoning: {result['chart_1'].get('reasoning', 'N/A')}")
+            if result['chart_1'].get('chart_schema'):
+                print("Chart schema generated successfully")
+
+        if "chart_2" in result and result["chart_2"]:
+            print("\n=== Chart 2 ===")
+            print(f"Chart Type: {result['chart_2'].get('chart_type', 'N/A')}")
+            print(f"Reasoning: {result['chart_2'].get('reasoning', 'N/A')}")
+            if result['chart_2'].get('chart_schema'):
+                print("Chart schema generated successfully")
+
+        if "charts_saved_to" in result and result["charts_saved_to"]:
+            print("\n=== Charts Saved To ===")
+            for file_path in result["charts_saved_to"]:
+                print(f"  - {file_path}")
+
+        if "chart_generation_error" in result:
+            print(f"\nChart Generation Error: {result['chart_generation_error']}")
+
     except Exception as e:
         logger.error(f"Pipeline Failed", extra={"props": {"error": str(e)}})
 

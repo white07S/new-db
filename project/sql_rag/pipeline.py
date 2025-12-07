@@ -30,6 +30,7 @@ from .connector import CustomSQLiteConnector
 from .retriever import InMemoryBM25Retriever
 from .agent import ScratchpadSchemaAgent
 from .operators import RobustSQLOperator
+from .chart_operators import ChartGenerationOperator
 from . import logger
 
 from dbgpt.rag.embedding import DefaultEmbeddingFactory
@@ -37,6 +38,7 @@ from dbgpt.model.proxy import OpenAILLMClient
 
 # --- Configuration Constants (Can be overridden via kwargs if needed) ---
 # Keeping them close for self-containment or passed in init
+
 RESPONSE_FORMAT_SIMPLE = {
     "thoughts": "thoughts summary to say to user",
     "sql": "SQL Query to run",
@@ -231,7 +233,15 @@ class SQLRAGPipeline:
                 llm_client=self.llm_client,
                 model_name=self.llm_model
             )
-            
+
+            # 4. Chart Generation (After SQL execution)
+            chart_gen_task = ChartGenerationOperator(
+                llm_client=self.llm_client,
+                model_name=self.llm_model,
+                vega_schema_path="chart_schema/vega-lite-schema-v5.json",
+                output_dir="chart_outputs"
+            )
+
             # Wiring
             (input_task 
              >> MapOperator(lambda x: x["user_input"]) 
@@ -257,9 +267,12 @@ class SQLRAGPipeline:
             # We want: sql_parse_task -> (join with merge_task) -> robust_exec_task
             merge_task >> combine_context_task
             sql_parse_task >> combine_context_task
-            
+
             combine_context_task >> robust_exec_task
-            
+
+            # Connect chart generation after SQL execution
+            robust_exec_task >> chart_gen_task
+
         # Execute
         logger.info(f"Executing Query", extra={"props": {"query": query}})
         input_data = {
@@ -269,4 +282,4 @@ class SQLRAGPipeline:
             "response": json.dumps(RESPONSE_FORMAT_SIMPLE, ensure_ascii=False, indent=4)
         }
         
-        return await robust_exec_task.call(input_data)
+        return await chart_gen_task.call(input_data)

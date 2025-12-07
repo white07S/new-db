@@ -97,23 +97,23 @@ class RobustSQLOperator(MapOperator[Dict[str, Any], Dict[str, Any]]):
 
     async def _correct_sql(self, query: str, bad_sql: str, error: str, schema: str) -> Dict[str, str]:
         """Call LLM to fix the SQL."""
-        
-        prompt = f"""You are a SQL Debugger. 
+
+        prompt = f"""You are a SQL Debugger.
 User Question: {query}
 
-Previous SQL: 
+Previous SQL:
 {bad_sql}
 
-Error Message: 
+Error Message:
 {error}
 
-Table Schema: 
+Table Schema:
 {schema}
 
-Analyze the error and the previous SQL. 
-1. Identify the syntactical or logical error.
-2. Check the schema for correct table/column names.
-3. Write the CORRECTED SQL.
+Analyze the error and the previous SQL:
+1. Identify the syntactical or logical error
+2. Check the schema for correct table/column names
+3. Write the CORRECTED SQL
 
 Response Format (JSON):
 {{
@@ -121,28 +121,38 @@ Response Format (JSON):
     "sql": "SELECT ..."
 }}
 """
+
         messages = [ModelMessage(role=ModelMessageRoleType.HUMAN, content=prompt)]
         request = ModelRequest(
             model=self.model_name,
             messages=messages,
             temperature=0.0
         )
-        
+
         response: ModelOutput = await self.llm_client.generate(request)
         if not response.success:
             raise Exception(f"Correction LLM call failed: {response.text}")
-            
+
         text_resp = response.text
-        # Naive JSON extraction
+
+        # Parse JSON response
         try:
             start = text_resp.find("{")
             end = text_resp.rfind("}") + 1
-            if start != -1 and end != -1:
+            if start != -1 and end > start:
                 json_str = text_resp[start:end]
-                return json.loads(json_str) 
-            return json.loads(text_resp)
-        except Exception:
-            # Fallback if JSON parsing fails? 
-            # Ideally we might want to retry parsing, but for now just return the original to crash next loop
-            logger.warning("Failed to parse correction JSON", extra={"props": {"response": text_resp}})
+                result = json.loads(json_str)
+            else:
+                result = json.loads(text_resp)
+
+            logger.info(f"SQL Correction", extra={"props": {
+                "thoughts": result.get("thoughts", ""),
+                "corrected_sql": result.get("sql", "")[:100] + "..." if result.get("sql") else ""
+            }})
+
+            return result
+
+        except Exception as e:
+            logger.warning(f"Failed to parse correction JSON: {e}", extra={"props": {"response": text_resp[:500]}})
+            # Fallback
             return {"sql": bad_sql, "thoughts": "Failed to parse correction."}
