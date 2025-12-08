@@ -7,8 +7,7 @@ import asyncio
 import json
 import os
 import shutil
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 from dbgpt.core import (
     ChatPromptTemplate,
@@ -26,8 +25,6 @@ from dbgpt.core.operators import PromptBuilderOperator, RequestBuilderOperator
 from dbgpt.model.operators import LLMOperator
 from dbgpt.model.proxy import OpenAILLMClient
 from dbgpt.rag.embedding import DefaultEmbeddingFactory
-from dbgpt_ext.rag import ChunkParameters
-from dbgpt_ext.rag.operators import EmbeddingAssemblerOperator
 from dbgpt_ext.storage.vector_store.chroma_store import ChromaStore, ChromaVectorConfig
 
 from .pdf_loader import MetadataAwarePDFLoader
@@ -85,22 +82,34 @@ class DocRAGPipeline:
     def __init__(
         self,
         openai_api_key: str,
+        azure_endpoint: str,
+        azure_api_key: str,
         llm_model: str = "gpt-4o",
         embedding_model: str = "text-embedding-3-small",
-        vector_store_path: str = "./doc_rag_vector_store"
+        vector_store_path: str = "./doc_rag_vector_store",
+        azure_model_id: str = "prebuilt-layout",
+        pdf_language: str = "en",
     ):
         """Initialize the Document RAG pipeline.
         
         Args:
             openai_api_key: OpenAI API key
+            azure_endpoint: Azure Document Intelligence endpoint
+            azure_api_key: Azure Document Intelligence API key
             llm_model: LLM model name
             embedding_model: Embedding model name
             vector_store_path: Path to store vector embeddings
+            azure_model_id: Azure Document Intelligence model ID
+            pdf_language: Language hint for document analysis
         """
         self.openai_api_key = openai_api_key
         self.llm_model = llm_model
         self.embedding_model = embedding_model
         self.vector_store_path = vector_store_path
+        self.azure_endpoint = azure_endpoint
+        self.azure_api_key = azure_api_key
+        self.azure_model_id = azure_model_id
+        self.pdf_language = pdf_language
         
         # Initialize components
         self.embeddings = DefaultEmbeddingFactory.openai(
@@ -109,6 +118,12 @@ class DocRAGPipeline:
         )
         
         self.llm_client = OpenAILLMClient(model=llm_model, api_key=openai_api_key)
+        self.pdf_loader = MetadataAwarePDFLoader(
+            azure_endpoint=azure_endpoint,
+            azure_api_key=azure_api_key,
+            azure_model_id=azure_model_id,
+            language=pdf_language,
+        )
         
         # Will be initialized during build_index
         self.vector_store = None
@@ -118,39 +133,40 @@ class DocRAGPipeline:
         
         logger.info(f"Initialized DocRAGPipeline", extra={"props": {
             "llm_model": llm_model,
-            "embedding_model": embedding_model
+            "embedding_model": embedding_model,
+            "azure_model_id": azure_model_id,
         }})
     
     async def build_index(
         self,
         pdf_path: str,
-        metadata_path: Optional[str] = None,
-        force_rebuild: bool = True
+        force_rebuild: bool = True,
+        chunk_size: int = 512,
+        chunk_overlap: int = 50,
     ):
         """Load PDF and build vector index.
         
         Args:
             pdf_path: Path to PDF file
-            metadata_path: Optional path to metadata JSON file
             force_rebuild: Whether to clear existing index
+            chunk_size: Chunk size to use during parsing
+            chunk_overlap: Character overlap between chunks
         """
         logger.info(f"Building index", extra={"props": {
             "pdf_path": pdf_path,
-            "metadata_path": metadata_path
+            "force_rebuild": force_rebuild
         }})
         
         # Clean up vector store if force_rebuild
         if force_rebuild and os.path.exists(self.vector_store_path):
             shutil.rmtree(self.vector_store_path)
         
-        # Load document metadata
-        self.doc_metadata = {}
-        if metadata_path and os.path.exists(metadata_path):
-            self.doc_metadata = MetadataAwarePDFLoader.load_metadata_from_json(metadata_path)
-        
-        # Load PDF with metadata
-        loader = MetadataAwarePDFLoader(language="en")
-        self.chunks = loader.load(pdf_path, self.doc_metadata)
+        # Load PDF content and metadata via Azure Document Intelligence
+        self.chunks, self.doc_metadata = self.pdf_loader.load(
+            pdf_path,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
         
         # Initialize vector store
         self.vector_store = ChromaStore(
@@ -266,8 +282,7 @@ class DocRAGPipeline:
             prompt = ChatPromptTemplate(
                 messages=[
                     SystemPromptTemplate.from_template(
-                        SYSTEM_PROMPT,
-                        response_format=json.dumps(RESPONSE_FORMAT, indent=2)
+                        SYSTEM_PROMPT
                     ),
                     HumanPromptTemplate.from_template("{question}"),
                 ]
@@ -317,10 +332,11 @@ class DocRAGPipeline:
             merge_meta_task >> MapOperator(lambda x: x.get("source_chunks", [])) >> final_task
         
         # Execute
+        metadata = self.doc_metadata or {}
         input_data = {
             "question": question,
-            "doc_title": self.doc_metadata.get("title", "Unknown"),
-            "source_file": self.doc_metadata.get("source", "Unknown"),
+            "doc_title": metadata.get("title", "Unknown"),
+            "source_file": metadata.get("source", "Unknown"),
             "response_format": json.dumps(RESPONSE_FORMAT, indent=2)
         }
         
@@ -339,26 +355,32 @@ async def run_doc_rag_demo():
     
     # Configuration
     API_KEY = os.environ.get("OPENAI_API_KEY", "")
-    PDF_PATH = "doc_rag/test_data/2511.09030v1.pdf"
-    METADATA_PATH = "doc_rag/test_data/meta_data.json"
+    AZURE_ENDPOINT = os.environ.get("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", "")
+    AZURE_KEY = os.environ.get("AZURE_DOCUMENT_INTELLIGENCE_KEY", "")
+    PDF_PATH = "doc_rag/test_data/2q25-media-release-en.pdf"
     
     if not API_KEY:
         print("Please set OPENAI_API_KEY environment variable")
+        return
+    if not AZURE_ENDPOINT or not AZURE_KEY:
+        print("Please set AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT and AZURE_DOCUMENT_INTELLIGENCE_KEY environment variables")
         return
     
     # Initialize pipeline
     pipeline = DocRAGPipeline(
         openai_api_key=API_KEY,
+        azure_endpoint=AZURE_ENDPOINT,
+        azure_api_key=AZURE_KEY,
         llm_model="gpt-4o",
         embedding_model="text-embedding-3-small",
         vector_store_path="./doc_rag_chroma_store"
     )
     
     # Build index
-    await pipeline.build_index(PDF_PATH, METADATA_PATH)
+    await pipeline.build_index(PDF_PATH)
     
     # Query
-    question = "What is MAKER and how does it achieve zero-error execution?"
+    question = "What net profit did UBS report for Q2 2025?"
     result = await pipeline.query(question)
     
     print("\n=== Answer ===")
