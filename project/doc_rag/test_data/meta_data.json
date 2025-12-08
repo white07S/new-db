@@ -1,0 +1,36 @@
+{
+    "title": "Solving a Million-Step LLM Task with Zero Errors",
+    "authors": [
+        "Elliot Meyerson",
+        "Giuseppe Paolo",
+        "Roberto Dailey",
+        "Hormoz Shahrzad",
+        "Olivier Francon",
+        "Conor F. Hayes",
+        "Xin Qiu",
+        "Babak Hodjat",
+        "Risto Miikkulainen"
+    ],
+    "organizations": [
+        "Cognizant AI Lab",
+        "UT Austin"
+    ],
+    "source": "arXiv:2511.09030v1",
+    "date": "2025-11-12",
+    "file_type": "pdf",
+    "pages": 29,
+    "abstract": "The paper introduces MAKER, the first system to solve a task requiring over one million LLM-dependent steps with zero errors. It relies on extreme task decomposition into micro-agents, per-step error correction through a voting scheme, and red-flag filtering to remove unreliable outputs.",
+    "keywords": [
+        "LLM",
+        "agentic systems",
+        "error correction",
+        "multi-agent",
+        "Towers of Hanoi",
+        "scaling laws",
+        "task decomposition",
+        "MAKER",
+        "MDAP"
+    ],
+    "domain": "Artificial Intelligence / Large Language Model Reliability",
+    "summary": "LLMs fail on long-horizon tasks due to cumulative error. MAKER achieves zero-error execution over >1M steps by decomposing tasks into minimal subtasks, applying aggressive error correction, and filtering low-quality outputs. This demonstrates a new scalability path for AI systems without requiring ever-larger monolithic LLMs."
+}

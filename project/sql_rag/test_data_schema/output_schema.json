@@ -1,0 +1,495 @@
+{
+  "tables": [
+    {
+      "table_name": "olist_customers_dataset",
+      "primary_key": "customer_id",
+      "foreign_keys": [
+        {
+          "from_column": "customer_zip_code_prefix",
+          "to_table": "olist_geolocation_dataset",
+          "to_column": "geolocation_zip_code_prefix",
+          "from_table": "olist_customers_dataset",
+          "relationship_type": "many-to-one"
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "customer_id",
+          "column_dtype": "TEXT",
+          "column_comment": "Unique identifier for each customer",
+          "column_business_interpretation": "This is the primary key for the customer table and serves as a reference to link customer data with orders in the `olist_orders_dataset`, allowing analysts to analyze customer order habits, retention, and lifetime value."
+        },
+        {
+          "column_name": "customer_unique_id",
+          "column_dtype": "TEXT",
+          "column_comment": "Unique identifier for each customer across orders",
+          "column_business_interpretation": "Used to identify repeat customers across multiple orders, enabling analysis of customer loyalty and purchasing patterns."
+        },
+        {
+          "column_name": "customer_zip_code_prefix",
+          "column_dtype": "INTEGER",
+          "column_comment": "Zip code prefix of the customer's location",
+          "column_business_interpretation": "Links to `olist_geolocation_dataset` to provide geographic analysis of customer distribution, enabling segmentation and regional performance analysis."
+        },
+        {
+          "column_name": "customer_city",
+          "column_dtype": "TEXT",
+          "column_comment": "City of the customer",
+          "column_business_interpretation": "Useful for geo-segmentation analysis, allowing aggregation of sales data by city to identify regional trends and hotspots."
+        },
+        {
+          "column_name": "customer_state",
+          "column_dtype": "TEXT",
+          "column_comment": "State of the customer",
+          "column_business_interpretation": "Enables aggregation by state for regional analysis, supporting targeted marketing strategies and state-wise performance reporting."
+        }
+      ],
+      "table_name_comment": "Contains customer demographic information.",
+      "primary_key_comment": "Unique customer identification.",
+      "foreign_key_comment": "Links customer location data to geolocation data using zip code prefix.",
+      "table_name_business_interpretations": "Provides demographic data necessary to analyze customer distribution and behavior by geographic area and link with orders.",
+      "primary_key_business_interpretations": "Serves as a unique identifier to link customer information with orders.",
+      "foreign_key_business_interpretations": "Enables geographic insights by linking zip code information with geolocation data."
+    },
+    {
+      "table_name": "olist_order_items_dataset",
+      "primary_key": "order_id",
+      "foreign_keys": [
+        {
+          "from_column": "order_id",
+          "to_table": "olist_orders_dataset",
+          "to_column": "order_id",
+          "from_table": "olist_order_items_dataset",
+          "relationship_type": "many-to-one"
+        },
+        {
+          "from_column": "product_id",
+          "to_table": "olist_products_dataset",
+          "to_column": "product_id",
+          "from_table": "olist_order_items_dataset",
+          "relationship_type": "many-to-one"
+        },
+        {
+          "from_column": "seller_id",
+          "to_table": "olist_sellers_dataset",
+          "to_column": "seller_id",
+          "from_table": "olist_order_items_dataset",
+          "relationship_type": "many-to-one"
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "order_id",
+          "column_dtype": "TEXT",
+          "column_comment": "Identifier for the order",
+          "column_business_interpretation": "This key links order items to orders, enabling analysis of each item sold per order, thus providing insights into product sales performance per order."
+        },
+        {
+          "column_name": "order_item_id",
+          "column_dtype": "INTEGER",
+          "column_comment": "Sequence number of the item in the order",
+          "column_business_interpretation": "Indicates item count per order, useful for analyzing order complexity, and average number of items per order."
+        },
+        {
+          "column_name": "product_id",
+          "column_dtype": "TEXT",
+          "column_comment": "Identifier for the product",
+          "column_business_interpretation": "Connects products to order items, facilitating analysis of product popularity, cross-selling opportunities, and stock management by joining with `olist_products_dataset`."
+        },
+        {
+          "column_name": "seller_id",
+          "column_dtype": "TEXT",
+          "column_comment": "Identifier for the seller",
+          "column_business_interpretation": "Links sellers to their orders, allows performance measurement of sellers, and comparison of revenue by joining with `olist_sellers_dataset`."
+        },
+        {
+          "column_name": "shipping_limit_date",
+          "column_dtype": "TEXT",
+          "column_comment": "Deadline for the item to be shipped",
+          "column_business_interpretation": "Enables the analysis of shipping performance and time-to-ship metrics which are critical for understanding logistics efficiency."
+        },
+        {
+          "column_name": "price",
+          "column_dtype": "REAL",
+          "column_comment": "Price of the item",
+          "column_business_interpretation": "Facilitates revenue calculation on a per-item basis and helps in pricing strategy analysis when aggregated across orders."
+        },
+        {
+          "column_name": "freight_value",
+          "column_dtype": "REAL",
+          "column_comment": "Cost of shipment for the item",
+          "column_business_interpretation": "Allows evaluation of shipping cost efficiency and its impact on order profitability when combined with `price`."
+        }
+      ],
+      "table_name_comment": "Details of items in each order.",
+      "primary_key_comment": "Composite key (order_id, order_item_id) due to multiple items per order.",
+      "foreign_key_comment": "Links each order item to its respective order, product, and seller.",
+      "table_name_business_interpretations": "Allows detailed analysis of sales by item, essential for understanding product and seller performance.",
+      "primary_key_business_interpretations": "Enables identification of line items within orders.",
+      "foreign_key_business_interpretations": "Facilitates multi-dimensional sales performance analysis through linked tables."
+    },
+    {
+      "table_name": "olist_orders_dataset",
+      "primary_key": "order_id",
+      "foreign_keys": [
+        {
+          "from_column": "customer_id",
+          "to_table": "olist_customers_dataset",
+          "to_column": "customer_id",
+          "from_table": "olist_orders_dataset",
+          "relationship_type": "many-to-one"
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "order_id",
+          "column_dtype": "TEXT",
+          "column_comment": "Unique identifier for each order",
+          "column_business_interpretation": "Essential for linking orders to their details in the `olist_order_items_dataset`, enabling complete order and sales analysis."
+        },
+        {
+          "column_name": "customer_id",
+          "column_dtype": "TEXT",
+          "column_comment": "References the customer who placed the order",
+          "column_business_interpretation": "Connects orders to customers to evaluate customer behavior and lifetime value when joined with `olist_customers_dataset`."
+        },
+        {
+          "column_name": "order_status",
+          "column_dtype": "TEXT",
+          "column_comment": "Current status of the order",
+          "column_business_interpretation": "Facilitates the analysis of order fulfillment stages, conversion rates, and identification of delivery issues."
+        },
+        {
+          "column_name": "order_purchase_timestamp",
+          "column_dtype": "TEXT",
+          "column_comment": "Timestamp when the order was placed",
+          "column_business_interpretation": "Enables analysis of sales trends over time and peak shopping periods."
+        },
+        {
+          "column_name": "order_approved_at",
+          "column_dtype": "TEXT",
+          "column_comment": "Timestamp when the order was approved",
+          "column_business_interpretation": "Helps analyze the order approval workflow and identify delays in processing orders."
+        },
+        {
+          "column_name": "order_delivered_carrier_date",
+          "column_dtype": "TEXT",
+          "column_comment": "Date the order was delivered to the carrier",
+          "column_business_interpretation": "Allows analysis of logistics and carrier delivery performance."
+        },
+        {
+          "column_name": "order_delivered_customer_date",
+          "column_dtype": "TEXT",
+          "column_comment": "Date the order was delivered to customer",
+          "column_business_interpretation": "Crucial for evaluating delivery performance and customer wait times."
+        },
+        {
+          "column_name": "order_estimated_delivery_date",
+          "column_dtype": "TEXT",
+          "column_comment": "Estimated delivery date of the order",
+          "column_business_interpretation": "Used to assess delivery accuracy and improve reliability predictions."
+        }
+      ],
+      "table_name_comment": "Records of customer orders.",
+      "primary_key_comment": "Unique order identifier.",
+      "foreign_key_comment": "Links orders to customer demographic data.",
+      "table_name_business_interpretations": "Central table for analyzing order and sales metrics, connects directly to customers and their purchasing behavior.",
+      "primary_key_business_interpretations": "Facilitates detailed tracking and analysis of specific orders.",
+      "foreign_key_business_interpretations": "Connects customer data for enhanced demographic analysis."
+    },
+    {
+      "table_name": "olist_order_payments_dataset",
+      "primary_key": "order_id",
+      "foreign_keys": [
+        {
+          "from_column": "order_id",
+          "to_table": "olist_orders_dataset",
+          "to_column": "order_id",
+          "from_table": "olist_order_payments_dataset",
+          "relationship_type": "many-to-one"
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "order_id",
+          "column_dtype": "TEXT",
+          "column_comment": "References the order being paid",
+          "column_business_interpretation": "Connects payment information with order details, essential for financial analysis and revenue tracking by order."
+        },
+        {
+          "column_name": "payment_sequential",
+          "column_dtype": "INTEGER",
+          "column_comment": "Sequential number of the payment (for multiple payments in orders)",
+          "column_business_interpretation": "Useful for understanding payment patterns and installment plans, supporting sales strategy."
+        },
+        {
+          "column_name": "payment_type",
+          "column_dtype": "TEXT",
+          "column_comment": "Method of payment used",
+          "column_business_interpretation": "Facilitates the analysis of payment method popularity and customer preferences across different sales channels."
+        },
+        {
+          "column_name": "payment_installments",
+          "column_dtype": "INTEGER",
+          "column_comment": "Number of installments for payment",
+          "column_business_interpretation": "Critical for cash flow analysis and financial forecasting, supports installment payment tracking."
+        },
+        {
+          "column_name": "payment_value",
+          "column_dtype": "REAL",
+          "column_comment": "Total paid amount for the order or installment",
+          "column_business_interpretation": "Allows revenue calculations by order, crucial for financial reporting, and pricing evaluations."
+        }
+      ],
+      "table_name_comment": "Information on payments related to orders.",
+      "primary_key_comment": "No single primary key due to multiple payments per order.",
+      "foreign_key_comment": "Links payment information to order records.",
+      "table_name_business_interpretations": "Provides detailed insights into payment behaviors, enabling improved payment strategy and financial analysis.",
+      "primary_key_business_interpretations": "Facilitates tracking of payments without standalone primary key.",
+      "foreign_key_business_interpretations": "Ties payment data directly to order records for financial insights."
+    },
+    {
+      "table_name": "olist_products_dataset",
+      "primary_key": "product_id",
+      "foreign_keys": [],
+      "columns": [
+        {
+          "column_name": "product_id",
+          "column_dtype": "TEXT",
+          "column_comment": "Unique identifier for each product",
+          "column_business_interpretation": "Key for linking product details with sales in `olist_order_items_dataset`, vital for product performance analysis."
+        },
+        {
+          "column_name": "product_category_name",
+          "column_dtype": "TEXT",
+          "column_comment": "Category of the product",
+          "column_business_interpretation": "Enables category-level sales analysis and consumer preference segmentation."
+        },
+        {
+          "column_name": "product_name_lenght",
+          "column_dtype": "REAL",
+          "column_comment": "Length of product name",
+          "column_business_interpretation": "May correlate with product clarity and customer purchase confidence analysis."
+        },
+        {
+          "column_name": "product_description_lenght",
+          "column_dtype": "REAL",
+          "column_comment": "Length of product description",
+          "column_business_interpretation": "Can be used to assess the effect of description detail on sales conversion."
+        },
+        {
+          "column_name": "product_photos_qty",
+          "column_dtype": "REAL",
+          "column_comment": "Number of photos for the product",
+          "column_business_interpretation": "Important for understanding the relationship between visual content and sales success."
+        },
+        {
+          "column_name": "product_weight_g",
+          "column_dtype": "REAL",
+          "column_comment": "Weight of the product in grams",
+          "column_business_interpretation": "Useful for logistics planning and shipping cost analysis."
+        },
+        {
+          "column_name": "product_length_cm",
+          "column_dtype": "REAL",
+          "column_comment": "Product length in centimeters",
+          "column_business_interpretation": "Facilitates packaging and delivery planning, and cost assessments."
+        },
+        {
+          "column_name": "product_height_cm",
+          "column_dtype": "REAL",
+          "column_comment": "Product height in centimeters",
+          "column_business_interpretation": "Integral to product dimension analysis, enables optimal storage and shipment."
+        },
+        {
+          "column_name": "product_width_cm",
+          "column_dtype": "REAL",
+          "column_comment": "Product width in centimeters",
+          "column_business_interpretation": "Part of dimensional analysis aiding in packaging efficiency."
+        }
+      ],
+      "table_name_comment": "Details about each product available for sale.",
+      "primary_key_comment": "Unique product identifier for joining with sales data.",
+      "foreign_key_comment": "No foreign keys as this is a standalone product catalog table.",
+      "table_name_business_interpretations": "Essential for catalog management and product-feature analysis, connects with sales data to assess product performance.",
+      "primary_key_business_interpretations": "Provides unique linkage key to associated sales data.",
+      "foreign_key_business_interpretations": "No foreign key relationships, used as reference table."
+    },
+    {
+      "table_name": "olist_order_reviews_dataset",
+      "primary_key": "review_id",
+      "foreign_keys": [
+        {
+          "from_column": "order_id",
+          "to_table": "olist_orders_dataset",
+          "to_column": "order_id",
+          "from_table": "olist_order_reviews_dataset",
+          "relationship_type": "many-to-one"
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "review_id",
+          "column_dtype": "TEXT",
+          "column_comment": "Unique identifier for each review",
+          "column_business_interpretation": "Allows tracking of reviews related to specific orders, provides a link to qualitative analysis of customer feedback."
+        },
+        {
+          "column_name": "order_id",
+          "column_dtype": "TEXT",
+          "column_comment": "Identifier linking to the order being reviewed",
+          "column_business_interpretation": "Connects reviews to orders to evaluate customer satisfaction and gather feedback on specific order experiences."
+        },
+        {
+          "column_name": "review_score",
+          "column_dtype": "INTEGER",
+          "column_comment": "Rating score given by the customer",
+          "column_business_interpretation": "Used to measure customer satisfaction and product performance, beneficial for reputation management and quality control."
+        },
+        {
+          "column_name": "review_comment_title",
+          "column_dtype": "TEXT",
+          "column_comment": "Title of the review comment",
+          "column_business_interpretation": "Provides qualitative insights into customer expectations and initial product impressions."
+        },
+        {
+          "column_name": "review_comment_message",
+          "column_dtype": "TEXT",
+          "column_comment": "Customer's review comment",
+          "column_business_interpretation": "Delivers detailed customer feedback, useful for sentiment analysis and service improvement strategies."
+        },
+        {
+          "column_name": "review_creation_date",
+          "column_dtype": "TEXT",
+          "column_comment": "Date when the review was created",
+          "column_business_interpretation": "Helps in analyzing the timeliness of reviews and post-purchase engagement."
+        },
+        {
+          "column_name": "review_answer_timestamp",
+          "column_dtype": "TEXT",
+          "column_comment": "Timestamp when the review was responded to",
+          "column_business_interpretation": "Allows analysis of response times and customer support efficiency."
+        }
+      ],
+      "table_name_comment": "Contains reviews written by customers for orders.",
+      "primary_key_comment": "Unique identifier for tracking reviews.",
+      "foreign_key_comment": "Links reviews to order dataset to allow cross-referencing with sales data.",
+      "table_name_business_interpretations": "Facilitates evaluation of customer feedback on orders, enabling comprehensive sentiment and satisfaction analysis.",
+      "primary_key_business_interpretations": "Provides unique reference for tracking individual reviews.",
+      "foreign_key_business_interpretations": "Enables connection to orders for multi-dimensional feedback analysis."
+    },
+    {
+      "table_name": "olist_geolocation_dataset",
+      "primary_key": "geolocation_zip_code_prefix",
+      "foreign_keys": [],
+      "columns": [
+        {
+          "column_name": "geolocation_zip_code_prefix",
+          "column_dtype": "INTEGER",
+          "column_comment": "Zip code prefix for geographical area",
+          "column_business_interpretation": "Primary connection point for geographic data, enabling location-based analysis of both customers and sellers."
+        },
+        {
+          "column_name": "geolocation_lat",
+          "column_dtype": "REAL",
+          "column_comment": "Latitude of the geographical location",
+          "column_business_interpretation": "Facilitates geospatial analysis, critical for mapping customer and seller locations."
+        },
+        {
+          "column_name": "geolocation_lng",
+          "column_dtype": "REAL",
+          "column_comment": "Longitude of the geographical location",
+          "column_business_interpretation": "Complements latitude for complete geospatial analysis, supports geographic trends analysis."
+        },
+        {
+          "column_name": "geolocation_city",
+          "column_dtype": "TEXT",
+          "column_comment": "City corresponding to the geolocation",
+          "column_business_interpretation": "Aids in city-level segmentation and trend analysis when joined with orders and customer tables."
+        },
+        {
+          "column_name": "geolocation_state",
+          "column_dtype": "TEXT",
+          "column_comment": "State of the geolocation",
+          "column_business_interpretation": "Key for state-level aggregation and regional performance analysis, supports strategic decision making."
+        }
+      ],
+      "table_name_comment": "Provides geographical coordinates associated with Brazilian zip code prefixes.",
+      "primary_key_comment": "Unique identifier for geographical data by zip code prefix.",
+      "foreign_key_comment": "No foreign keys, but serves as a reference for geographic data.",
+      "table_name_business_interpretations": "Supports location-based insights and demographic analysis when combined with customer and seller data.",
+      "primary_key_business_interpretations": "References location data for geographic insights.",
+      "foreign_key_business_interpretations": "No direct foreign key relationships, but provides geospatial context for customer and seller data."
+    },
+    {
+      "table_name": "olist_sellers_dataset",
+      "primary_key": "seller_id",
+      "foreign_keys": [
+        {
+          "from_column": "seller_zip_code_prefix",
+          "to_table": "olist_geolocation_dataset",
+          "to_column": "geolocation_zip_code_prefix",
+          "from_table": "olist_sellers_dataset",
+          "relationship_type": "many-to-one"
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "seller_id",
+          "column_dtype": "TEXT",
+          "column_comment": "Unique identifier for each seller",
+          "column_business_interpretation": "Key for linking seller details with their products and sales, enabling vendor analysis and sales performance evaluation."
+        },
+        {
+          "column_name": "seller_zip_code_prefix",
+          "column_dtype": "INTEGER",
+          "column_comment": "Zip code prefix of the seller's location",
+          "column_business_interpretation": "Connects to geolocation data for geographical analysis and seller segmentation by location."
+        },
+        {
+          "column_name": "seller_city",
+          "column_dtype": "TEXT",
+          "column_comment": "City where the seller is located",
+          "column_business_interpretation": "Useful for analyzing sales distribution and performance by city, assisting in market penetration strategies."
+        },
+        {
+          "column_name": "seller_state",
+          "column_dtype": "TEXT",
+          "column_comment": "State where the seller is located",
+          "column_business_interpretation": "Supports state-level strategy planning and performance comparisons."
+        }
+      ],
+      "table_name_comment": "Details of sellers participating in the marketplace.",
+      "primary_key_comment": "Unique identifier for linking to sales data.",
+      "foreign_key_comment": "Links seller location data to geographic dataset using zip code prefix.",
+      "table_name_business_interpretations": "Facilitates understanding of seller performance and geographic distribution.",
+      "primary_key_business_interpretations": "Serves as the identifier for connecting sellers to their products and sales.",
+      "foreign_key_business_interpretations": "Links seller locations to geolocation data for spatial analysis."
+    },
+    {
+      "table_name": "product_category_name_translation",
+      "primary_key": "product_category_name",
+      "foreign_keys": [],
+      "columns": [
+        {
+          "column_name": "product_category_name",
+          "column_dtype": "TEXT",
+          "column_comment": "Original product category name",
+          "column_business_interpretation": "Provides native language product categorization, useful for localized product analysis."
+        },
+        {
+          "column_name": "product_category_name_english",
+          "column_dtype": "TEXT",
+          "column_comment": "English translation of the product category name",
+          "column_business_interpretation": "Facilitates analysis across international teams and aids in global strategy development by providing category translations."
+        }
+      ],
+      "table_name_comment": "Maps product category names from original to English.",
+      "primary_key_comment": "Unique category identifier for translation reference.",
+      "foreign_key_comment": "No foreign keys as this is a standalone translation table.",
+      "table_name_business_interpretations": "Enables product category understanding across language barriers, essential for global market analysis.",
+      "primary_key_business_interpretations": "Used to consistently reference product categories across datasets.",
+      "foreign_key_business_interpretations": "No direct foreign key relationships, used for understanding category translations."
+    }
+  ]
+}

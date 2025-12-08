@@ -1,8 +1,6 @@
 
 import json
-import logging
-import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Tuple
 
 from dbgpt.core.awel import MapOperator
 from dbgpt.model.proxy import OpenAILLMClient
@@ -10,6 +8,7 @@ from dbgpt.core.interface.message import ModelMessage, ModelMessageRoleType
 from dbgpt.core.interface.llm import ModelRequest, ModelOutput
 
 from . import logger
+from .sql_validation import extract_allowed_tables, validate_sql_query
 
 class RobustSQLOperator(MapOperator[Dict[str, Any], Dict[str, Any]]):
     """
@@ -36,64 +35,83 @@ class RobustSQLOperator(MapOperator[Dict[str, Any], Dict[str, Any]]):
         - thoughts: reasoning
         """
         
-        current_sql = input_value["sql"]
+        current_sql = input_value.get("sql", "")
         user_query = input_value.get("user_input", "")
         # table_info might be needed for correction context
         schema_context = input_value.get("table_info", "Schema info not available.")
+        allowed_tables = extract_allowed_tables(schema_context)
         
         # We start with the thoughts from the previous step
         last_thoughts = input_value.get("thoughts", "")
         
-        for attempt in range(self.max_retries + 1):
+        attempt = 0
+        while attempt <= self.max_retries:
+            is_valid, validation_error = validate_sql_query(current_sql, allowed_tables)
+            if not is_valid:
+                logger.warning(
+                    "SQL validation failed",
+                    extra={"props": {"reason": validation_error, "sql_preview": current_sql[:120]}},
+                )
+                attempt += 1
+                if attempt > self.max_retries:
+                    raise ValueError(f"SQL validation failed after retries: {validation_error}")
+                current_sql, last_thoughts = await self._attempt_correction(
+                    attempt, user_query, current_sql, validation_error, schema_context, last_thoughts
+                )
+                continue
+
             try:
-                # Try execution
-                logger.info(f"Attempt {attempt+1}: Executing SQL", extra={"props": {"sql": current_sql}})
-                
-                # Using run_to_df or run based on what's available, 
-                # but let's stick to what main.py did: run_to_df via connector
-                # result = self.connector.run_to_df(current_sql) 
-                
-                # Check main.py ... it used DatasourceOperator which calls connector.run_to_df
-                # We can call it directly.
+                logger.info(
+                    f"Attempt {attempt+1}: Executing SQL", extra={"props": {"sql": current_sql}}
+                )
                 df_result = self.connector.run_to_df(current_sql)
-                
                 logger.info("Execution Success")
-                
                 return {
                     **input_value,
                     "sql": current_sql,
                     "data": df_result,
-                    "thoughts": last_thoughts # Preserve thoughts or append success msg
+                    "thoughts": last_thoughts,
                 }
-                
             except Exception as e:
                 error_msg = str(e)
-                logger.warning(f"Execution Failed", extra={"props": {"error": error_msg}})
-                
-                if attempt < self.max_retries:
-                    logger.info(f"Triggering Correction", extra={"props": {"remaining_attempts": self.max_retries - attempt}})
-                    
-                    # Correction Step
-                    correction_result = await self._correct_sql(
-                        user_query, 
-                        current_sql, 
-                        error_msg, 
-                        schema_context
-                    )
-                    
-                    current_sql = correction_result.get("sql", current_sql)
-                    new_thoughts = correction_result.get("thoughts", "")
-                    
-                    # Update thoughts to include correction history
-                    last_thoughts += f"\n\n[Correction Attempt {attempt+1}]\nError: {error_msg}\nFix Logic: {new_thoughts}"
-                    
-                else:
+                logger.warning("Execution Failed", extra={"props": {"error": error_msg}})
+                attempt += 1
+                if attempt > self.max_retries:
                     logger.error("Max retries reached. Raising exception")
-                    # Re-raise the last exception if we are out of retries
-                    raise e
-                    
-        # Should not reach here
-        raise Exception("Unexpected control flow in RobustSQLOperator")
+                    raise
+                current_sql, last_thoughts = await self._attempt_correction(
+                    attempt, user_query, current_sql, error_msg, schema_context, last_thoughts
+                )
+
+        raise RuntimeError("SQL execution loop exited unexpectedly.")
+
+    async def _attempt_correction(
+        self,
+        attempt_index: int,
+        user_query: str,
+        current_sql: str,
+        error_msg: str,
+        schema_context: str,
+        last_thoughts: str,
+    ) -> Tuple[str, str]:
+        remaining_attempts = max(self.max_retries + 1 - attempt_index, 0)
+        logger.info(
+            "Triggering Correction",
+            extra={"props": {"remaining_attempts": remaining_attempts}},
+        )
+        correction_result = await self._correct_sql(
+            user_query,
+            current_sql,
+            error_msg,
+            schema_context,
+        )
+        updated_sql = correction_result.get("sql", current_sql)
+        new_thoughts = correction_result.get("thoughts", "")
+        last_thoughts += (
+            f"\n\n[Correction Attempt {attempt_index}]"
+            f"\nError: {error_msg}\nFix Logic: {new_thoughts}"
+        )
+        return updated_sql, last_thoughts
 
     async def _correct_sql(self, query: str, bad_sql: str, error: str, schema: str) -> Dict[str, str]:
         """Call LLM to fix the SQL."""

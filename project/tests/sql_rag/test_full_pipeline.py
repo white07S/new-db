@@ -2,9 +2,8 @@
 import asyncio
 import os
 from sql_rag.pipeline import SQLRAGPipeline
-from sql_rag.logger import setup_logger
+from sql_rag import logger
 
-logger = setup_logger("main")
 
 # ============================================================================
 # CONFIGURATION - UPDATE THESE VALUES

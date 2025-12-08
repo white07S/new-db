@@ -12,7 +12,7 @@ from dbgpt.core.awel import MapOperator
 from dbgpt.model.proxy import OpenAILLMClient
 
 from sql_rag.chart_agent import ChartGenerationAgent
-from sql_rag.logger import setup_logger
+from sql_rag import setup_logger
 
 logger = setup_logger("chart_operators")
 

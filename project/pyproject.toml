@@ -12,3 +12,10 @@ dependencies = [
     "requests>=2.32.5",
     "sqlalchemy>=2.0.44",
 ]
+
+[tool.setuptools.packages.find]
+include = ["sql_rag*", "doc_rag*", "common*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"

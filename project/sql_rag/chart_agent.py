@@ -17,7 +17,7 @@ from sql_rag.chart_utils import (
     ChartGenerationResults,
     chart_generation_instructions
 )
-from sql_rag.logger import setup_logger
+from sql_rag import setup_logger
 
 logger = setup_logger("chart_agent")
 
