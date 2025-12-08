@@ -1,0 +1,77 @@
+# Configuration file for fullrag server
+
+[providers]
+# Default provider to use: "openai" or "azure"
+default_provider = "openai"
+
+[providers.openai]
+# OpenAI API Configuration
+api_base = "${env:OPENAI_API_BASE:-https://api.openai.com/v1}"
+api_key = "${env:OPENAI_API_KEY:-}"
+
+[providers.openai.models]
+llm = "${env:OPENAI_LLM_MODEL:-gpt-4o}"
+embedding = "${env:OPENAI_EMBEDDING_MODEL:-text-embedding-3-large}"
+
+[providers.openai.embedding]
+api_url = "${env:OPENAI_EMBEDDING_API_URL:-https://api.openai.com/v1/embeddings}"
+
+[providers.azure]
+# Azure OpenAI API Configuration
+api_base = "${env:AZURE_OPENAI_ENDPOINT:-https://autogen-testing-ubs.openai.azure.com/}"
+api_key = "${env:AZURE_OPENAI_API_KEY:-}"
+api_version = "${env:AZURE_OPENAI_API_VERSION:-2025-03-01-preview}"
+
+[providers.azure.models]
+llm = "${env:AZURE_LLM_MODEL:-gpt-4o}"
+embedding = "${env:AZURE_EMBEDDING_MODEL:-text-embedding-3-large}"
+
+[providers.azure.embedding]
+api_url = "${env:AZURE_EMBEDDING_API_URL:-https://autogen-testing-ubs.cognitiveservices.azure.com/openai/deployments/text-embedding-3-large/embeddings?api-version=2024-12-01-preview}"
+
+# Azure Document Intelligence (Form Recognizer)
+[providers.azure_doc_intelligence]
+api_url = "${env:AZURE_DOC_INTELLIGENCE_ENDPOINT:-https://<your-resource-name>.cognitiveservices.azure.com/}"
+api_key = "${env:AZURE_DOC_INTELLIGENCE_KEY:-}"
+
+# -----------------------------------------------------------------------------
+# Data stores
+# -----------------------------------------------------------------------------
+
+[redis]
+# Redis configuration
+host = "${env:REDIS_HOST:-localhost}"
+port = "${env:REDIS_PORT:-6379}"
+db   = "${env:REDIS_DB:-0}"
+# Optional single URL form, if you prefer
+url  = "${env:REDIS_URL:-redis://localhost:6379/0}"
+
+[qdrant]
+# Qdrant configuration
+url     = "${env:QDRANT_URL:-http://localhost:6333}"
+api_key = "${env:QDRANT_API_KEY:-}"
+# Optional: collection naming prefix, etc.
+collection_prefix = "${env:QDRANT_COLLECTION_PREFIX:-fullrag_}"
+
+[postgres]
+# Postgres configuration
+host     = "${env:POSTGRES_HOST:-localhost}"
+port     = "${env:POSTGRES_PORT:-5432}"
+user     = "${env:POSTGRES_USER:-postgres}"
+password = "${env:POSTGRES_PASSWORD:-postgres_password}"
+database = "${env:POSTGRES_DB:-app_db}"
+# Optional DSN if you want to use a single URL
+dsn      = "${env:POSTGRES_DSN:-postgresql://postgres:postgres_password@localhost:5432/app_db}"
+
+# -----------------------------------------------------------------------------
+# Testing / local demo config
+# -----------------------------------------------------------------------------
+
+[testing]
+# Test DB URL (SQLite) for local experiments
+# Original: SQLITE_DB_PATH = "/Users/preetam/Develop/data_testing/brazilian_ecommerce.sqlite"
+test_db_url = "${env:SQLITE_DB_PATH:-/Users/preetam/Develop/data_testing/brazilian_ecommerce.sqlite}"
+
+# Test PDF for doc RAG
+# Original: PDF_PATH = "doc_rag/test_data/2q25-media-release-en.pdf"
+test_doc_pdf = "${env:PDF_PATH:-doc_rag/test_data/2q25-media-release-en.pdf}"

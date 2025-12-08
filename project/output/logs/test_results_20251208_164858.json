@@ -1,0 +1,162 @@
+[
+  {
+    "name": "Top Customers",
+    "complexity": "basic",
+    "query": "Show me the top 5 customers by total revenue",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 1.262431
+  },
+  {
+    "name": "Monthly Revenue",
+    "complexity": "basic",
+    "query": "What was the total revenue for each month in 2018?",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.305829
+  },
+  {
+    "name": "Customer Orders Join",
+    "complexity": "medium",
+    "query": "Show me all customers from S\u00e3o Paulo who made orders in 2018 with their order totals",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 1.5359
+  },
+  {
+    "name": "Product Category Analysis",
+    "complexity": "complex",
+    "query": "\n                For each product category, show me:\n                - Total revenue\n                - Number of unique customers\n                - Average delivery time in days\n                - Average review score\n                Only include delivered orders from 2018\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 1.337457
+  },
+  {
+    "name": "Seller Performance",
+    "complexity": "medium",
+    "query": "\n                Calculate for each seller:\n                - Total revenue\n                - Number of orders\n                - Number of unique customers\n                - Average order value\n                Sort by total revenue descending and show top 10\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.504957
+  },
+  {
+    "name": "Category Performance with Filters",
+    "complexity": "complex",
+    "query": "\n                Find all product categories that have:\n                - More than 100 orders\n                - Average price above 50\n                - Total revenue over 10000\n                Show the category name, order count, average price, and total revenue\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.612756
+  },
+  {
+    "name": "Seller Ranking by State",
+    "complexity": "complex",
+    "query": "\n                Rank sellers within each state by their total revenue.\n                Show the top 3 sellers per state with their rank, state, city, and revenue.\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.613015
+  },
+  {
+    "name": "Cumulative Revenue",
+    "complexity": "complex",
+    "query": "\n                Calculate the cumulative revenue by month for 2018.\n                Include the percentage of total yearly revenue for each month.\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.615358
+  },
+  {
+    "name": "Month-over-Month Growth",
+    "complexity": "complex",
+    "query": "\n                Compare each month's revenue with the previous month in 2018.\n                Calculate the month-over-month growth rate percentage.\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.313954
+  },
+  {
+    "name": "Customer Cohort Analysis",
+    "complexity": "complex",
+    "query": "\n                Find customer cohorts by their first purchase month.\n                Show the number of customers in each cohort and their average lifetime value.\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 1.223191
+  },
+  {
+    "name": "Seller Performance Comparison",
+    "complexity": "complex",
+    "query": "\n                Compare seller performance between first and second half of 2018.\n                Include revenue growth, customer base growth, and average order value change.\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.427336
+  },
+  {
+    "name": "Above Average Products",
+    "complexity": "medium",
+    "query": "\n                Find products that are priced above the average price of their category.\n                Show product name, category, price, and category average price.\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.442286
+  },
+  {
+    "name": "Customer Order Analysis",
+    "complexity": "complex",
+    "query": "\n                For each customer who made more than 3 orders, show:\n                - Customer ID\n                - Total orders\n                - Total spending\n                - Their percentage of total revenue\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.354601
+  },
+  {
+    "name": "Year-over-Year Growth",
+    "complexity": "complex",
+    "query": "\n                Calculate year-over-year revenue growth for each product category.\n                Compare 2017 vs 2018 monthly revenue.\n                Include growth percentage and absolute difference.\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.925467
+  },
+  {
+    "name": "Customer Segmentation",
+    "complexity": "complex",
+    "query": "\n                Segment customers into tiers based on their total spending:\n                - Platinum: top 10%\n                - Gold: next 20%\n                - Silver: next 30%\n                - Bronze: remaining\n                Show the count and average order value for each tier.\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.397039
+  },
+  {
+    "name": "Market Basket Analysis",
+    "complexity": "complex",
+    "query": "\n                Find the top 10 product pairs that are frequently bought together.\n                Show how many times each pair appears in the same order.\n                Exclude pairs from the same category.\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.523854
+  },
+  {
+    "name": "Geographic Sales Analysis",
+    "complexity": "medium",
+    "query": "\n                Analyze sales performance by state:\n                - Total revenue\n                - Number of orders\n                - Average order value\n                - Number of unique customers\n                Group by state and sort by total revenue descending.\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.437335
+  },
+  {
+    "name": "Delivery Performance Analysis",
+    "complexity": "complex",
+    "query": "\n                Analyze delivery performance:\n                - Average delivery time by state\n                - Percentage of late deliveries (>10 days)\n                - Correlation between order value and delivery time\n                Group by seller state\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.484545
+  },
+  {
+    "name": "Customer Retention Analysis",
+    "complexity": "complex",
+    "query": "\n                Calculate customer retention metrics:\n                - Number of one-time customers\n                - Number of repeat customers\n                - Average time between first and second purchase\n                - Repeat purchase rate by month\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.613481
+  },
+  {
+    "name": "Product Performance Metrics",
+    "complexity": "complex",
+    "query": "\n                For the top 20 products by revenue, calculate:\n                - Total units sold\n                - Total revenue\n                - Average price\n                - Number of unique customers\n                - Average review score\n                - Return/cancellation rate\n                ",
+    "status": "error",
+    "error": "'QdrantClient' object has no attribute 'search'",
+    "execution_time": 0.306385
+  }
+]

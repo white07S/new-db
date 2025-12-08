@@ -1,0 +1,39 @@
+# Core dependencies
+python-dotenv>=1.0.0
+toml>=0.10.2
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Database
+SQLAlchemy>=2.0.0
+aiosqlite>=0.19.0
+
+# LLM and embeddings
+openai>=1.0.0
+tiktoken>=0.5.0
+
+# Vector store
+qdrant-client>=1.7.0
+
+# Document processing
+PyPDF2>=3.0.0
+rank-bm25>=0.2.2
+
+# Azure (optional)
+azure-storage-blob>=12.19.0
+azure-ai-documentintelligence>=1.0.0
+
+# Logging and utilities
+colorlog>=6.7.0
+tenacity>=8.2.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Type hints
+typing-extensions>=4.8.0
+pydantic>=2.0.0
+
+# DBGpt dependencies (if used)
+# dbgpt>=0.5.0

@@ -1,3 +1,0 @@
-common
-doc_rag
-sql_rag

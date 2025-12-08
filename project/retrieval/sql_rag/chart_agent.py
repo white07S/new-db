@@ -11,13 +11,13 @@ from dbgpt.core.interface.llm import LLMClient, ModelRequest
 from dbgpt.core.interface.message import ModelMessage, ModelMessageRoleType
 from dbgpt.core import ModelOutput
 
-from sql_rag.chart_utils import (
+from retrieval.sql_rag.chart_utils import (
     ChartDataPreprocessor,
     ChartGenerationPostProcessor,
     ChartGenerationResults,
     chart_generation_instructions
 )
-from sql_rag import setup_logger
+from common.logger import setup_logger
 
 logger = setup_logger("chart_agent")
 
